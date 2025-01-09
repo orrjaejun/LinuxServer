@@ -1,0 +1,171 @@
+version: "3.8"
+
+services:
+  webserver:
+    image: royalmachine/web_dns:1.0
+    container_name: web_dns
+    hostname: web_dns
+    ports:
+      - "80:80"
+    restart: always
+    privileged: true
+    networks:
+      vlan101:
+        ipv4_address: 192.168.101.2
+    cap_add:
+      - NET_ADMIN
+    command: ["/bin/bash", "-c", "route add -net 192.168.103.0 netmask 255.255.255.0 gw 192.168.101.250 \
+    && route add -net 192.168.100.0 netmask 255.255.255.0 gw 192.168.101.250 \
+    && route add -net 192.168.102.0 netmask 255.255.255.0 gw 192.168.101.250 \
+    && route add -net 192.168.21.0 netmask 255.255.255.0 gw 192.168.101.250 && /usr/sbin/init"]
+
+  intranet:
+    image: royalmachine/web_dns:1.0
+    container_name: intranet
+    hostname: intranet
+    restart: always
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    command: ["/bin/bash", "-c", "route add -net 192.168.101.0 netmask 255.255.255.0 gw 192.168.103.250 \
+    && route add -net 192.168.100.0 netmask 255.255.255.0 gw 192.168.103.250 \
+    && route add -net 192.168.102.0 netmask 255.255.255.0 gw 192.168.103.250 \
+    && route add -net 192.168.21.0 netmask 255.255.255.0 gw 192.168.103.250 && /usr/sbin/init"]
+    networks:
+      vlan103:
+        ipv4_address: 192.168.103.2
+    
+  ftp:
+    image: royalmachine/dhcp_ftp:1.0
+    container_name: dhcp_ftp
+    hostname: dhcp_ftp
+    restart: always
+    privileged: true
+    networks:
+      vlan100:
+        ipv4_address: 192.168.100.2
+    cap_add:
+      - NET_ADMIN
+    command: ["/bin/bash", "-c", "route add -net 192.168.101.0 netmask 255.255.255.0 gw 192.168.100.250 \
+    && route add -net 192.168.103.0 netmask 255.255.255.0 gw 192.168.100.250 \
+    && route add -net 192.168.102.0 netmask 255.255.255.0 gw 192.168.100.250 \
+    && route add -net 192.168.21.0 netmask 255.255.255.0 gw 192.168.100.250 && /usr/sbin/init"]
+
+
+  email:
+    image: royalmachine/email:1.0
+    container_name: email
+    hostname: email
+    restart: always
+    privileged: true
+    networks:
+      vlan102:
+        ipv4_address: 192.168.102.2
+    cap_add:
+      - NET_ADMIN
+    command: ["/bin/bash", "-c", "route add -net 192.168.103.0 netmask 255.255.255.0 gw 192.168.102.250 \
+    && route add -net 192.168.100.0 netmask 255.255.255.0 gw 192.168.102.250 \
+    && route add -net 192.168.101.0 netmask 255.255.255.0 gw 192.168.102.250 \
+    && route add -net 192.168.21.0 netmask 255.255.255.0 gw 192.168.102.250 && /usr/sbin/init"]
+
+  router:
+    image: royalmachine/router:1.0
+    container_name: router
+    hostname: Router
+    restart: always
+    privileged: true
+    networks:
+      vlan21:
+        ipv4_address: 192.168.21.250
+      vlan100:
+        ipv4_address: 192.168.100.250
+      vlan101:
+        ipv4_address: 192.168.101.250
+      vlan102:
+        ipv4_address: 192.168.102.250
+      vlan103:
+        ipv4_address: 192.168.103.250
+
+  client1:
+    image: dokken/centos-stream-9
+    container_name: client1
+    hostname: Client1
+    ports:
+      - "5901:5901"
+    restart: always
+    privileged: true
+    networks:
+      vlan21:
+        ipv4_address: 192.168.21.2
+    cap_add:
+      - NET_ADMIN
+    command: ["/bin/bash", "-c", "route add -net 192.168.103.0 netmask 255.255.255.0 gw 192.168.21.250 \
+    && route add -net 192.168.100.0 netmask 255.255.255.0 gw 192.168.21.250 \
+    && route add -net 192.168.102.0 netmask 255.255.255.0 gw 192.168.21.250 \
+    && route add -net 192.168.101.0 netmask 255.255.255.0 gw 192.168.21.250 && /usr/sbin/init"]
+
+
+  client2:
+    image: dokken/centos-stream-9
+    container_name: client2
+    hostname: Client2
+    ports:
+      - "5902:5901"
+    restart: always
+    privileged: true
+    networks:
+      vlan21:
+        ipv4_address: 192.168.21.3
+    cap_add:
+      - NET_ADMIN
+    command: ["/bin/bash", "-c", "route add -net 192.168.103.0 netmask 255.255.255.0 gw 192.168.21.250 \
+    && route add -net 192.168.100.0 netmask 255.255.255.0 gw 192.168.21.250 \
+    && route add -net 192.168.102.0 netmask 255.255.255.0 gw 192.168.21.250 \
+    && route add -net 192.168.101.0 netmask 255.255.255.0 gw 192.168.21.250 && /usr/sbin/init"]
+
+  
+networks:
+  vlan21:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: vlan21
+    ipam:
+      config:
+        - subnet: 192.168.21.0/24
+
+
+  vlan100:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: vlan100
+    ipam:
+      config:
+        - subnet: 192.168.100.0/24
+
+  vlan101:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: vlan101
+    ipam:
+      config:
+        - subnet: 192.168.101.0/24
+
+
+  vlan102:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: vlan102
+    ipam:
+      config:
+        - subnet: 192.168.102.0/24
+
+
+  vlan103:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: vlan103
+    ipam:
+      config:
+        - 
+          subnet: 192.168.103.0/24 
+
